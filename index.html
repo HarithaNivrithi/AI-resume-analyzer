@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #0b0b14;
+      --bg-card: #12121f;
+      --bg-elevated: #1a1a2e;
+      --border: rgba(255,255,255,0.06);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-start: #a855f7;
+      --accent-mid: #ec4899;
+      --accent-end: #06b6d4;
+      --success: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 40px 16px;
+      line-height: 1.6;
+    }
+
+    .ra-container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--bg-deep);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 0 60px rgba(168,85,247,0.08);
+    }
+
+    .ra-hero { text-align: center; margin-bottom: 32px; }
+    .ra-hero h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent-start), var(--accent-mid), var(--accent-end));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .ra-hero p { margin: 0; color: var(--text-muted); font-size: 14px; font-weight: 400; }
+
+    .ra-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+      background: var(--bg-card);
+      padding: 5px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    .ra-tab {
+      flex: 1;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-muted);
+      transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+      letter-spacing: 0.01em;
+      font-family: inherit;
+    }
+    .ra-tab:hover { color: var(--text-secondary); }
+    .ra-tab.active {
+      background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(236,72,153,0.15));
+      color: var(--text-primary);
+      box-shadow: 0 0 20px rgba(168,85,247,0.1);
+    }
+
+    .ra-panel { display: none; animation: raFade 0.3s ease; }
+    .ra-panel.active { display: block; }
+    @keyframes raFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .ra-input-wrap { position: relative; }
+    .ra-textarea {
+      width: 100%;
+      min-height: 300px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      font-size: 13.5px;
+      line-height: 1.7;
+      resize: vertical;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: inherit;
+      transition: all 0.2s;
+      outline: none;
+    }
+    .ra-textarea::placeholder { color: var(--text-muted); }
+    .ra-textarea:focus {
+      border-color: rgba(168,85,247,0.4);
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.08);
+    }
+
+    .ra-job-input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 14px;
+      margin-bottom: 14px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: inherit;
+      transition: all 0.2s;
+      outline: none;
+    }
+    .ra-job-input::placeholder { color: var(--text-muted); }
+    .ra-job-input:focus {
+      border-color: rgba(168,85,247,0.4);
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.08);
+    }
+
+    .ra-btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .ra-btn {
+      background: linear-gradient(135deg, var(--accent-start), var(--accent-mid));
+      color: #fff;
+      border: none;
+      padding: 13px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 0.01em;
+      position: relative;
+      overflow: hidden;
+      font-family: inherit;
+    }
+    .ra-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .ra-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(168,85,247,0.25); }
+    .ra-btn:hover::before { opacity: 1; }
+    .ra-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .ra-btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .ra-btn-ghost:hover {
+      border-color: rgba(168,85,247,0.4);
+      color: var(--text-primary);
+      background: rgba(168,85,247,0.06);
+      box-shadow: none;
+    }
+
+    .ra-results { margin-top: 28px; }
+    .ra-hidden { display: none; }
+
+    .ra-glass {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+    }
+
+    .ra-score-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .ra-score-ring-wrap {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      flex-shrink: 0;
+    }
+    .ra-score-ring {
+      width: 120px;
+      height: 120px;
+      transform: rotate(-90deg);
+    }
+    .ra-score-ring circle { fill: none; stroke-width: 7; }
+    .ra-score-ring .track { stroke: rgba(255,255,255,0.06); }
+    .ra-score-ring .fill {
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .ra-score-num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .ra-score-labels { flex: 1; min-width: 200px; }
+    .ra-score-labels h2 {
+      margin: 0 0 6px 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .ra-score-labels p {
+      margin: 0 0 12px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .ra-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .ra-pill-success { background: rgba(34,197,94,0.1); color: var(--success); border: 1px solid rgba(34,197,94,0.15); }
+    .ra-pill-warn { background: rgba(245,158,11,0.1); color: var(--warn); border: 1px solid rgba(245,158,11,0.15); }
+    .ra-pill-danger { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.15); }
+
+    .ra-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .ra-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .ra-stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      transition: all 0.2s;
+    }
+    .ra-stat-card:hover {
+      border-color: rgba(168,85,247,0.2);
+      transform: translateY(-1px);
+    }
+    .ra-stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .ra-stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .ra-stat-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .ra-sections-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .ra-sec-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .ra-sec-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--text-muted);
+      opacity: 0.3;
+      transition: all 0.3s;
+    }
+    .ra-sec-card.found::before {
+      background: var(--success);
+      opacity: 1;
+      box-shadow: 0 0 12px rgba(34,197,94,0.3);
+    }
+    .ra-sec-card.missing::before {
+      background: var(--danger);
+      opacity: 1;
+      box-shadow: 0 0 12px rgba(239,68,68,0.3);
+    }
+    .ra-sec-card:hover { border-color: rgba(255,255,255,0.1); }
+    .ra-sec-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ra-sec-status {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ra-status-ok { background: rgba(34,197,94,0.12); color: var(--success); }
+    .ra-status-miss { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .ra-sec-meta { font-size: 11px; color: var(--text-muted); }
+
+    .ra-suggestion-list {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+    .ra-sugg-head {
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+    .ra-sugg-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .ra-sugg-item:last-child { border-bottom: none; }
+    .ra-sugg-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .ra-sugg-icon.good {
+      background: rgba(34,197,94,0.1);
+      color: var(--success);
+      border: 1px solid rgba(34,197,94,0.15);
+    }
+    .ra-sugg-icon.warn {
+      background: rgba(245,158,11,0.1);
+      color: var(--warn);
+      border: 1px solid rgba(245,158,11,0.15);
+    }
+    .ra-sugg-icon.bad {
+      background: rgba(239,68,68,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.15);
+    }
+    .ra-sugg-text h4 {
+      margin: 0 0 4px 0;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .ra-sugg-text p {
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .ra-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .ra-kw {
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    .ra-kw-found {
+      background: rgba(34,197,94,0.08);
+      color: var(--success);
+      border: 1px solid rgba(34,197,94,0.12);
+    }
+    .ra-kw-missing {
+      background: rgba(239,68,68,0.08);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.12);
+    }
+    .ra-kw-partial {
+      background: rgba(245,158,11,0.08);
+      color: var(--warn);
+      border: 1px solid rgba(245,158,11,0.12);
+    }
+
+    .ra-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px;
+    }
+    .ra-detail-row:last-child { border-bottom: none; }
+    .ra-detail-label { color: var(--text-muted); }
+    .ra-detail-value { font-weight: 600; color: var(--text-primary); }
+
+    .ra-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: raSpin 0.7s linear infinite;
+    }
+    @keyframes raSpin { to { transform: rotate(360deg); } }
+
+    .ra-match-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .ra-match-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .ra-fade-in { animation: raFade 0.5s ease; }
+  </style>
+</head>
+<body>
+
+<div class="ra-container">
+  <div class="ra-hero">
+    <h1>RESUME ANALYZER</h1>
+    <p>Paste your resume. Get instant, AI-powered feedback and scoring.</p>
+  </div>
+
+  <div class="ra-tabs">
+    <button class="ra-tab active" onclick="switchTab('paste')">Paste Resume</button>
+    <button class="ra-tab" onclick="switchTab('job')">Job Match</button>
+  </div>
+
+  <div id="panel-paste" class="ra-panel active">
+    <div class="ra-input-wrap">
+      <textarea id="resumeInput" class="ra-textarea" placeholder="Paste your resume text here...
+
+Example:
+Alex Rivera
+alex.rivera@email.com | (555) 987-6543 | San Francisco, CA | linkedin.com/in/alexrivera
+
+PROFESSIONAL SUMMARY
+Innovative software engineer with 6+ years of experience building scalable web applications...
+
+TECHNICAL SKILLS
+Languages: JavaScript, TypeScript, Python, Go, SQL
+Frontend: React, Next.js, Vue.js, HTML5, CSS3, Tailwind
+Backend: Node.js, Express, Django, GraphQL, REST APIs
+Cloud & DevOps: AWS, Docker, Kubernetes, Terraform, CI/CD
+
+PROFESSIONAL EXPERIENCE
+Senior Software Engineer | Stripe | Jan 2021 – Present
+- Architected and launched a new payment processing pipeline handling $50M+ daily transactions
+- Led a team of 5 engineers to rebuild the merchant dashboard using React and TypeScript
+
+EDUCATION
+BS Computer Science, University of Texas at Austin, 2016"></textarea>
+    </div>
+    <div class="ra-btn-row">
+      <button class="ra-btn" id="analyzeBtn" onclick="analyzeResume()">Analyze Resume</button>
+      <button class="ra-btn ra-btn-ghost" onclick="loadSample()">Load Sample</button>
+      <button class="ra-btn ra-btn-ghost" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+
+  <div id="panel-job" class="ra-panel">
+    <input type="text" id="jobTitle" class="ra-job-input" placeholder="Enter job title (e.g., Senior Software Engineer, Product Manager, Data Scientist)...">
+    <textarea id="resumeInputJob" class="ra-textarea" style="min-height: 220px;" placeholder="Paste your resume here for job-specific analysis..."></textarea>
+    <div class="ra-btn-row">
+      <button class="ra-btn" id="matchBtn" onclick="analyzeJobMatch()">Calculate Job Match</button>
+    </div>
+  </div>
+
+  <div id="results" class="ra-results ra-hidden"></div>
+</div>
+
+<script>
+  const SECTION_PATTERNS = {
+    contact: { regex: /(?:contact|email|phone|linkedin|github|portfolio|address|location)/i, weight: 10, name: 'Contact Info' },
+    summary: { regex: /(?:summary|profile|objective|about me|professional summary)/i, weight: 10, name: 'Summary' },
+    experience: { regex: /(?:experience|work experience|employment|professional experience|career history)/i, weight: 25, name: 'Experience' },
+    education: { regex: /(?:education|academic|degree|university|college|school|qualifications)/i, weight: 15, name: 'Education' },
+    skills: { regex: /(?:skills|technical skills|core competencies|expertise|proficiencies)/i, weight: 20, name: 'Skills' },
+    projects: { regex: /(?:projects|portfolio|personal projects|open source)/i, weight: 10, name: 'Projects' },
+    certifications: { regex: /(?:certifications|certificates|licenses|accreditations)/i, weight: 5, name: 'Certifications' },
+    awards: { regex: /(?:awards|honors|achievements|recognition)/i, weight: 5, name: 'Awards' }
+  };
+
+  const ACTION_VERBS = [
+    'achieved','improved','trained','created','resolved','increased','decreased','managed','led','developed',
+    'delivered','designed','implemented','streamlined','optimized','automated','spearheaded','launched',
+    'generated','reduced','enhanced','coordinated','collaborated','engineered','architected','mentored',
+    'negotiated','researched','analyzed','presented','facilitated','transformed','pioneered','drove'
+  ];
+
+  const WEAK_WORDS = ['responsible for','duties included','worked on','helped with','assisted in','part of','involved in'];
+
+  const COMMON_SKILLS = [
+    'communication','leadership','problem solving','teamwork','time management','critical thinking','adaptability',
+    'creativity','collaboration','organization','attention to detail','project management','analytical skills'
+  ];
+
+  const JOB_KEYWORDS = {
+    'software engineer': ['javascript','python','java','react','node','aws','docker','kubernetes','sql','git','agile','rest api','microservices','ci/cd','typescript','cloud'],
+    'data scientist': ['python','r','sql','machine learning','deep learning','tensorflow','pytorch','pandas','numpy','scikit-learn','statistics','data visualization','tableau','power bi','spark','hadoop'],
+    'product manager': ['roadmap','stakeholder','agile','scrum','jira','confluence','user research','a/b testing','metrics','kpi','strategy','prioritization','cross-functional','mvp','user stories'],
+    'ux designer': ['figma','sketch','adobe xd','user research','wireframing','prototyping','usability testing','design systems','interaction design','accessibility','user journey','information architecture'],
+    'marketing manager': ['seo','sem','google analytics','social media','content strategy','crm','email marketing','brand management','ppc','conversion rate','growth hacking','copywriting','market research'],
+    'sales': ['crm','salesforce','lead generation','cold calling','negotiation','pipeline','quota','b2b','b2c','account management','prospecting','closing','relationship building'],
+    'devops': ['aws','azure','gcp','docker','kubernetes','terraform','ansible','jenkins','github actions','ci/cd','linux','bash','python','monitoring','prometheus','grafana'],
+    'cybersecurity': ['siem','firewall','penetration testing','vulnerability assessment','incident response','soc','compliance','gdpr','nist','encryption','network security','malware analysis']
+  };
+
+  function switchTab(tab) {
+    document.querySelectorAll('.ra-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ra-panel').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  function loadSample() {
+    const sample = `Alex Rivera
+alex.rivera@email.com | (555) 987-6543 | San Francisco, CA | linkedin.com/in/alexrivera
+
+PROFESSIONAL SUMMARY
+Innovative software engineer with 6+ years of experience building scalable web applications and distributed systems. Passionate about clean code, system design, and mentoring junior developers. Proven track record of delivering high-impact projects that increased revenue and improved user experience.
+
+TECHNICAL SKILLS
+Languages: JavaScript, TypeScript, Python, Go, SQL
+Frontend: React, Next.js, Vue.js, HTML5, CSS3, Tailwind
+Backend: Node.js, Express, Django, GraphQL, REST APIs
+Cloud & DevOps: AWS (EC2, S3, Lambda, RDS), Docker, Kubernetes, Terraform, CI/CD
+Databases: PostgreSQL, MongoDB, Redis, Elasticsearch
+Tools: Git, Jira, Figma, DataDog, Prometheus
+
+PROFESSIONAL EXPERIENCE
+Senior Software Engineer | Stripe | Jan 2021 – Present | San Francisco, CA
+- Architected and launched a new payment processing pipeline handling $50M+ daily transactions, reducing latency by 35%
+- Led a team of 5 engineers to rebuild the merchant dashboard using React and TypeScript, improving user satisfaction scores by 28%
+- Implemented comprehensive monitoring and alerting with DataDog and Prometheus, decreasing incident response time by 60%
+- Mentored 3 junior engineers through structured code reviews and pair programming sessions
+- Drove migration from monolith to microservices, improving deployment frequency from weekly to daily
+
+Software Engineer | Airbnb | Jun 2018 – Dec 2020 | San Francisco, CA
+- Developed core booking flow features used by 100M+ users, increasing conversion rates by 12%
+- Built real-time messaging system using WebSockets and Redis, supporting 1M+ concurrent connections
+- Optimized database queries and introduced caching strategies, reducing API response time by 45%
+- Collaborated with product and design teams to launch 3 major product initiatives ahead of schedule
+
+Junior Developer | StartupXYZ | Aug 2016 – May 2018 | Austin, TX
+- Built RESTful APIs and responsive web interfaces for a B2B SaaS platform
+- Implemented automated testing suite achieving 85% code coverage
+- Participated in agile ceremonies and contributed to sprint planning and retrospectives
+
+EDUCATION
+Bachelor of Science in Computer Science | University of Texas at Austin | 2016
+GPA: 3.8/4.0 | Dean's List | Relevant Coursework: Algorithms, Distributed Systems, Database Management
+
+CERTIFICATIONS
+AWS Certified Solutions Architect – Professional (2023)
+Google Cloud Professional Data Engineer (2022)
+
+PROJECTS
+Open Source Contributor – React ecosystem (5K+ GitHub stars)
+Personal Blog – Technical articles on system design (50K+ monthly readers)`;
+    document.getElementById('resumeInput').value = sample;
+    document.getElementById('resumeInputJob').value = sample;
+  }
+
+  function clearAll() {
+    document.getElementById('resumeInput').value = '';
+    document.getElementById('resumeInputJob').value = '';
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('results').classList.add('ra-hidden');
+  }
+
+  function analyzeResume() {
+    const text = document.getElementById('resumeInput').value.trim();
+    if (!text || text.length < 100) {
+      alert('Please paste a resume with at least 100 characters.');
+      return;
+    }
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ra-spinner"></span> Analyzing...';
+    setTimeout(() => {
+      const data = runAnalysis(text);
+      renderResults(data);
+      btn.disabled = false;
+      btn.innerHTML = 'Analyze Resume';
+    }, 1000);
+  }
+
+  function analyzeJobMatch() {
+    const text = document.getElementById('resumeInputJob').value.trim();
+    const jobTitle = document.getElementById('jobTitle').value.trim();
+    if (!text || text.length < 100) {
+      alert('Please paste a resume with at least 100 characters.');
+      return;
+    }
+    if (!jobTitle) {
+      alert('Please enter a job title.');
+      return;
+    }
+    const btn = document.getElementById('matchBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ra-spinner"></span> Calculating...';
+    setTimeout(() => {
+      const data = runJobMatchAnalysis(text, jobTitle);
+      renderJobMatchResults(data);
+      btn.disabled = false;
+      btn.innerHTML = 'Calculate Job Match';
+    }, 1000);
+  }
+
+  function runAnalysis(text) {
+    const lower = text.toLowerCase();
+    const lines = text.split('\n').filter(l => l.trim());
+    const words = text.match(/\b\w+\b/g) || [];
+    const charCount = text.length;
+    const wordCount = words.length;
+
+    const sections = {};
+    let sectionScore = 0, maxSectionScore = 0;
+    for (const [key, cfg] of Object.entries(SECTION_PATTERNS)) {
+      const found = cfg.regex.test(text);
+      sections[key] = { found, name: cfg.name, weight: cfg.weight };
+      maxSectionScore += cfg.weight;
+      if (found) sectionScore += cfg.weight;
+    }
+
+    const actionVerbCount = ACTION_VERBS.filter(v => lower.includes(v)).length;
+    const actionVerbScore = Math.min(actionVerbCount * 3, 20);
+
+    const weakPhraseCount = WEAK_WORDS.filter(w => lower.includes(w)).length;
+    const weakPhraseScore = Math.max(0, 10 - weakPhraseCount * 2);
+
+    const quantifiableMatches = text.match(/\d+[%$]?|\b\d+\s*(?:percent|million|billion|users|customers|revenue|sales|growth|improvement|reduction|increase|decrease)\b/gi) || [];
+    const quantScore = Math.min(quantifiableMatches.length * 4, 15);
+
+    let lengthScore = 10;
+    if (wordCount < 200) lengthScore = 3;
+    else if (wordCount < 400) lengthScore = 6;
+    else if (wordCount > 1000) lengthScore = 8;
+
+    const hasEmail = /[\w.-]+@[\w.-]+\.\w+/.test(text);
+    const hasPhone = /\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/.test(text);
+    const hasLinkedIn = /linkedin\.com\/in\//i.test(text);
+    const contactScore = (hasEmail ? 3 : 0) + (hasPhone ? 3 : 0) + (hasLinkedIn ? 4 : 0);
+
+    const softSkillCount = COMMON_SKILLS.filter(s => lower.includes(s)).length;
+    const softSkillScore = Math.min(softSkillCount * 2, 10);
+
+    const bulletLines = lines.filter(l => /^[\s]*[•\-*]/.test(l));
+    const avgBulletLength = bulletLines.length ? bulletLines.reduce((a, l) => a + l.length, 0) / bulletLines.length : 0;
+    let bulletScore = 10;
+    if (bulletLines.length < 3) bulletScore = 3;
+    else if (avgBulletLength < 30) bulletScore = 5;
+    else if (avgBulletLength > 120) bulletScore = 6;
+
+    const totalScore = Math.round(
+      (sectionScore / maxSectionScore) * 25 +
+      actionVerbScore +
+      weakPhraseScore +
+      quantScore +
+      lengthScore +
+      contactScore +
+      softSkillScore +
+      bulletScore
+    );
+    const clampedScore = Math.min(Math.max(totalScore, 0), 100);
+
+    const suggestions = [];
+    if (!sections.summary.found) suggestions.push({ type: 'bad', icon: '!', title: 'Missing Professional Summary', text: 'Add a 2-3 sentence summary at the top highlighting your key strengths and career goals.' });
+    if (weakPhraseCount > 0) suggestions.push({ type: 'warn', icon: '~', title: 'Replace Weak Phrases', text: `Found ${weakPhraseCount} weak phrase(s) like "responsible for" or "worked on". Use strong action verbs instead.` });
+    if (quantifiableMatches.length < 3) suggestions.push({ type: 'warn', icon: '#', title: 'Add Quantifiable Achievements', text: 'Include metrics like "increased revenue by 25%" or "managed team of 10" to demonstrate impact.' });
+    if (!hasLinkedIn) suggestions.push({ type: 'warn', icon: '@', title: 'Add LinkedIn Profile', text: 'Including a LinkedIn URL adds credibility and gives recruiters more context.' });
+    if (bulletLines.length < 5) suggestions.push({ type: 'warn', icon: '>', title: 'Use More Bullet Points', text: 'Bullet points improve readability. Aim for 3-5 bullets per role with clear outcomes.' });
+    if (wordCount < 300) suggestions.push({ type: 'bad', icon: '-', title: 'Resume Too Short', text: 'Your resume seems brief. Expand on your experience with specific projects and achievements.' });
+    if (wordCount > 800) suggestions.push({ type: 'warn', icon: '+', title: 'Resume Too Long', text: 'Consider trimming to 1 page (early career) or 2 pages (experienced). Focus on the most relevant roles.' });
+    if (actionVerbCount < 5) suggestions.push({ type: 'warn', icon: '^', title: 'Use More Action Verbs', text: 'Start bullet points with strong verbs like "Led", "Architected", "Delivered", "Optimized".' });
+    if (!sections.projects.found && !sections.certifications.found) suggestions.push({ type: 'warn', icon: '*', title: 'Add Projects or Certifications', text: 'Side projects, certifications, or open source contributions strengthen your profile.' });
+    if (suggestions.length === 0) suggestions.push({ type: 'good', icon: 'OK', title: 'Great Resume', text: 'Your resume covers all essential sections and uses strong language. Consider tailoring it for each specific job application.' });
+
+    const allSkills = [...Object.values(JOB_KEYWORDS).flat(), ...COMMON_SKILLS];
+    const foundSkills = [...new Set(allSkills.filter(s => lower.includes(s)))];
+
+    return {
+      score: clampedScore,
+      sections,
+      metrics: {
+        wordCount,
+        charCount,
+        actionVerbs: actionVerbCount,
+        weakPhrases: weakPhraseCount,
+        quantifiable: quantifiableMatches.length,
+        bulletPoints: bulletLines.length,
+        hasEmail,
+        hasPhone,
+        hasLinkedIn,
+        foundSkills: foundSkills.length
+      },
+      suggestions,
+      foundSkills: foundSkills.slice(0, 20),
+      text
+    };
+  }
+
+  function runJobMatchAnalysis(text, jobTitle) {
+    const lower = text.toLowerCase();
+    const jobLower = jobTitle.toLowerCase();
+
+    let bestMatch = null, bestScore = 0;
+    for (const [job, keywords] of Object.entries(JOB_KEYWORDS)) {
+      let score = 0;
+      const jobWords = job.split(' ');
+      for (const w of jobWords) {
+        if (jobLower.includes(w)) score += 2;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = job;
+      }
+    }
+
+    const targetKeywords = bestMatch ? JOB_KEYWORDS[bestMatch] : JOB_KEYWORDS['software engineer'];
+    const matched = targetKeywords.filter(k => lower.includes(k));
+    const missing = targetKeywords.filter(k => !lower.includes(k));
+    const matchRate = Math.round((matched.length / targetKeywords.length) * 100);
+
+    const yearMatches = text.match(/(?:19|20)\d{2}/g) || [];
+    let yearsExp = 0;
+    if (yearMatches.length >= 2) {
+      const years = yearMatches.map(y => parseInt(y)).sort((a, b) => a - b);
+      yearsExp = Math.max(0, new Date().getFullYear() - years[0]);
+    }
+
+    const resumeJobTitles = text.match(/(?:engineer|manager|developer|analyst|designer|specialist|consultant|director|lead|architect)/gi) || [];
+
+    return {
+      jobTitle,
+      matchRate,
+      matchedKeywords: matched,
+      missingKeywords: missing,
+      yearsExp,
+      resumeJobTitles: [...new Set(resumeJobTitles)].slice(0, 5),
+      text
+    };
+  }
+
+  function renderResults(data) {
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.classList.remove('ra-hidden');
+
+    const scoreColor = data.score >= 80 ? '#22c55e' : data.score >= 60 ? '#f59e0b' : '#ef4444';
+    const circumference = 2 * Math.PI * 50;
+    const offset = circumference - (data.score / 100) * circumference;
+    const statusPill = data.score >= 80 ? 'ra-pill-success' : data.score >= 60 ? 'ra-pill-warn' : 'ra-pill-danger';
+    const statusText = data.score >= 80 ? 'Excellent' : data.score >= 60 ? 'Good' : 'Needs Work';
+
+    let sectionsHtml = '';
+    for (const [key, sec] of Object.entries(data.sections)) {
+      const statusClass = sec.found ? 'found' : 'missing';
+      const statusText = sec.found ? 'Found' : 'Missing';
+      const statusBadge = sec.found ? 'ra-status-ok' : 'ra-status-miss';
+      sectionsHtml += `<div class="ra-sec-card ${statusClass}"><div class="ra-sec-title">${sec.name}<span class="ra-sec-status ${statusBadge}">${statusText}</span></div><div class="ra-sec-meta">Weight: ${sec.weight}%</div></div>`;
+    }
+
+    let suggestionsHtml = '';
+    for (const s of data.suggestions) {
+      const iconClass = s.type === 'good' ? 'good' : s.type === 'warn' ? 'warn' : 'bad';
+      suggestionsHtml += `<div class="ra-sugg-item"><div class="ra-sugg-icon ${iconClass}">${s.icon}</div><div class="ra-sugg-text"><h4>${s.title}</h4><p>${s.text}</p></div></div>`;
+    }
+
+    let skillsHtml = '';
+    for (const skill of data.foundSkills) skillsHtml += `<span class="ra-kw ra-kw-found">${skill}</span>`;
+
+    resultsDiv.innerHTML = `
+      <div class="ra-fade-in">
+        <div class="ra-glass" style="margin-bottom: 14px;">
+          <div class="ra-score-hero">
+            <div class="ra-score-labels">
+              <h2>Overall Score</h2>
+              <p>Evaluated across structure, language, metrics, and best practices</p>
+              <span class="ra-pill ${statusPill}">${statusText} — ${data.score}/100</span>
+            </div>
+            <div class="ra-score-ring-wrap">
+              <svg class="ra-score-ring" viewBox="0 0 120 120">
+                <circle class="track" cx="60" cy="60" r="50"/>
+                <circle class="fill" cx="60" cy="60" r="50" stroke="${scoreColor}" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+              </svg>
+              <div class="ra-score-num">${data.score}</div>
+            </div>
+          </div>
+          <div class="ra-match-bar"><div class="ra-match-fill" style="width: ${data.score}%; background: ${scoreColor};"></div></div>
+        </div>
+
+        <div class="ra-grid-3">
+          <div class="ra-stat-card"><div class="ra-stat-label">Words</div><div class="ra-stat-value">${data.metrics.wordCount.toLocaleString()}</div></div>
+          <div class="ra-stat-card"><div class="ra-stat-label">Action Verbs</div><div class="ra-stat-value">${data.metrics.actionVerbs}</div></div>
+          <div class="ra-stat-card"><div class="ra-stat-label">Quantifiable Metrics</div><div class="ra-stat-value">${data.metrics.quantifiable}</div></div>
+          <div class="ra-stat-card"><div class="ra-stat-label">Bullet Points</div><div class="ra-stat-value">${data.metrics.bulletPoints}</div></div>
+          <div class="ra-stat-card"><div class="ra-stat-label">Weak Phrases</div><div class="ra-stat-value" style="color:${data.metrics.weakPhrases>0?'#ef4444':'#22c55e'}">${data.metrics.weakPhrases}</div></div>
+          <div class="ra-stat-card"><div class="ra-stat-label">Skills Detected</div><div class="ra-stat-value">${data.metrics.foundSkills}</div></div>
+        </div>
+
+        <div class="ra-grid-2" style="margin-bottom: 14px;">
+          <div class="ra-glass" style="padding: 20px;">
+            <div class="ra-stat-label" style="margin-bottom: 10px;">Contact Presence</div>
+            <div class="ra-detail-row"><span class="ra-detail-label">Email</span><span class="ra-detail-value" style="color:${data.metrics.hasEmail?'#22c55e':'#ef4444'}">${data.metrics.hasEmail?'Present':'Missing'}</span></div>
+            <div class="ra-detail-row"><span class="ra-detail-label">Phone</span><span class="ra-detail-value" style="color:${data.metrics.hasPhone?'#22c55e':'#ef4444'}">${data.metrics.hasPhone?'Present':'Missing'}</span></div>
+            <div class="ra-detail-row"><span class="ra-detail-label">LinkedIn</span><span class="ra-detail-value" style="color:${data.metrics.hasLinkedIn?'#22c55e':'#ef4444'}">${data.metrics.hasLinkedIn?'Present':'Missing'}</span></div>
+          </div>
+          <div class="ra-glass" style="padding: 20px;">
+            <div class="ra-stat-label" style="margin-bottom: 10px;">Detected Skills</div>
+            <div class="ra-keywords">${skillsHtml || '<span style="color:#64748b;font-size:12px;">No common skills detected</span>'}</div>
+          </div>
+        </div>
+
+        <div class="ra-sections-grid" style="margin-bottom: 14px;">${sectionsHtml}</div>
+
+        <div class="ra-suggestion-list">
+          <div class="ra-sugg-head">Suggestions & Improvements</div>
+          ${suggestionsHtml}
+        </div>
+      </div>
+    `;
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderJobMatchResults(data) {
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.classList.remove('ra-hidden');
+
+    const matchColor = data.matchRate >= 70 ? '#22c55e' : data.matchRate >= 40 ? '#f59e0b' : '#ef4444';
+    const matchClass = data.matchRate >= 70 ? 'ra-pill-success' : data.matchRate >= 40 ? 'ra-pill-warn' : 'ra-pill-danger';
+    const matchLabel = data.matchRate >= 70 ? 'Strong Match' : data.matchRate >= 40 ? 'Moderate Match' : 'Weak Match';
+    const circumference = 2 * Math.PI * 50;
+    const offset = circumference - (data.matchRate / 100) * circumference;
+
+    let matchedHtml = '', missingHtml = '';
+    for (const kw of data.matchedKeywords) matchedHtml += `<span class="ra-kw ra-kw-found">${kw}</span>`;
+    for (const kw of data.missingKeywords) missingHtml += `<span class="ra-kw ra-kw-missing">${kw}</span>`;
+
+    let tips = [];
+    if (data.matchRate < 50) tips.push({ icon: '>', title: 'Add Missing Keywords', text: `Consider learning or adding experience with: ${data.missingKeywords.slice(0,5).join(', ')}` });
+    if (data.yearsExp < 3) tips.push({ icon: '~', title: 'Highlight Learning & Growth', text: 'With less experience, emphasize projects, certifications, and transferable skills.' });
+    if (data.matchedKeywords.length < 3) tips.push({ icon: '!', title: 'Skill Gap Alert', text: 'There is a significant gap between your resume and typical requirements for this role.' });
+    if (tips.length === 0) tips.push({ icon: 'OK', title: 'Well Positioned', text: 'Your resume aligns well with this role. Tailor your summary to emphasize the matched skills.' });
+
+    let tipsHtml = '';
+    for (const t of tips) tipsHtml += `<div class="ra-sugg-item"><div class="ra-sugg-icon warn">${t.icon}</div><div class="ra-sugg-text"><h4>${t.title}</h4><p>${t.text}</p></div></div>`;
+
+    resultsDiv.innerHTML = `
+      <div class="ra-fade-in">
+        <div class="ra-glass" style="margin-bottom: 14px;">
+          <div class="ra-score-hero">
+            <div class="ra-score-labels">
+              <h2>Job Match</h2>
+              <p style="font-size: 15px; font-weight: 600; color: #e2e8f0; margin-bottom: 8px;">${data.jobTitle}</p>
+              <span class="ra-pill ${matchClass}">${matchLabel} — ${data.matchRate}%</span>
+            </div>
+            <div class="ra-score-ring-wrap">
+              <svg class="ra-score-ring" viewBox="0 0 120 120">
+                <circle class="track" cx="60" cy="60" r="50"/>
+                <circle class="fill" cx="60" cy="60" r="50" stroke="${matchColor}" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+              </svg>
+              <div class="ra-score-num">${data.matchRate}%</div>
+            </div>
+          </div>
+          <div class="ra-match-bar"><div class="ra-match-fill" style="width: ${data.matchRate}%; background: ${matchColor};"></div></div>
+        </div>
+
+        <div class="ra-grid-2" style="margin-bottom: 14px;">
+          <div class="ra-glass" style="padding: 20px;">
+            <div class="ra-stat-label" style="margin-bottom: 10px;">Matched Keywords (${data.matchedKeywords.length})</div>
+            <div class="ra-keywords">${matchedHtml || '<span style="color:#64748b;font-size:12px;">No matches found</span>'}</div>
+          </div>
+          <div class="ra-glass" style="padding: 20px;">
+            <div class="ra-stat-label" style="margin-bottom: 10px;">Missing Keywords (${data.missingKeywords.length})</div>
+            <div class="ra-keywords">${missingHtml || '<span style="color:#64748b;font-size:12px;">None missing</span>'}</div>
+          </div>
+        </div>
+
+        <div class="ra-suggestion-list">
+          <div class="ra-sugg-head">Tailoring Recommendations</div>
+          ${tipsHtml}
+        </div>
+      </div>
+    `;
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+
+</body>
+</html>
